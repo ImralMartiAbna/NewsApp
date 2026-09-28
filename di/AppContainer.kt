@@ -1,6 +1,12 @@
 package com.example.newsapp.di
 
 import com.example.newsapp.data.remote.NewsApiService
+import com.example.newsapp.data.remote.NewsRemoteDataSource
+import com.example.newsapp.data.repository.NewsRepositoryImpl
+import com.example.newsapp.domain.repository.NewsRepository
+import com.example.newsapp.domain.usecase.NewsInteractor
+import com.example.newsapp.domain.usecase.NewsUseCase
+import com.example.newsapp.presentation.viewmodel.NewsViewModel
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
