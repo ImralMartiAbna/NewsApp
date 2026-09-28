@@ -2,8 +2,15 @@ package com.example.newsapp
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.example.newsapp.di.MyApplication
 
 class MainActivity : AppCompatActivity() {
+
+    private val newsViewModel by lazy {
+        (application as MyApplication)
+            .appContainer
+            .newsViewModel
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
