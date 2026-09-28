@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.newsapp.di.MyApplication
 import com.example.newsapp.R
+
 class MainActivity : AppCompatActivity() {
 
     private val newsViewModel by lazy {
@@ -16,5 +17,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
+
+        newsViewModel.getTopHeadlines("id")
     }
 }
