@@ -13,6 +13,7 @@ class NewsViewModel(
 ) : ViewModel() {
 
     private val _articles = MutableStateFlow<List<Article>>(emptyList())
+
     val articles: StateFlow<List<Article>> = _articles
 
     fun getTopHeadlines(country: String) {
