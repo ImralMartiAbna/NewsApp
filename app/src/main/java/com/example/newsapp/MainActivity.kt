@@ -2,7 +2,6 @@ package com.example.newsapp
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.example.newsapp.di.MyApplication
 import com.example.newsapp.R
 
 class MainActivity : AppCompatActivity() {
@@ -17,7 +16,5 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
-
-        newsViewModel.getTopHeadlines("id")
     }
 }
