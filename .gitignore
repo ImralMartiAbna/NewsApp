@@ -4,3 +4,4 @@ build/
 **/build/
 *.swp
 *.swo
+app-debug.apk
