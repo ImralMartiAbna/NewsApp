@@ -1,11 +1,16 @@
+
 package com.example.newsapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.example.newsapp.presentation.MainActivity2
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -18,6 +23,8 @@ class MainActivity : AppCompatActivity() {
         appContainer.newsViewModel
     }
 
+    private var navigationStarted = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -27,18 +34,31 @@ class MainActivity : AppCompatActivity() {
         val tvStatus = findViewById<TextView>(R.id.tvStatus)
 
         lifecycleScope.launch {
-            newsViewModel.articles.collect { articles ->
-                if (articles.isNotEmpty()) {
-                    tvStatus.text =
-                        "Berhasil mendapatkan ${articles.size} berita."
-                }
-            }
-        }
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    newsViewModel.articles.collect { articles ->
+                        if (articles.isNotEmpty() && !navigationStarted) {
+                            navigationStarted = true
 
-        lifecycleScope.launch {
-            newsViewModel.errorMessage.collect { message ->
-                if (message != null) {
-                    tvStatus.text = message
+                            tvStatus.text =
+                                "Berhasil mendapatkan ${articles.size} berita."
+
+                            startActivity(
+                                Intent(
+                                    this@MainActivity,
+                                    MainActivity2::class.java
+                                )
+                            )
+                        }
+                    }
+                }
+
+                launch {
+                    newsViewModel.errorMessage.collect { message ->
+                        if (!message.isNullOrBlank()) {
+                            tvStatus.text = message
+                        }
+                    }
                 }
             }
         }
@@ -51,26 +71,31 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val savedApiKey = appContainer.apiKeyRepository.getApiKey()
+            val savedApiKey =
+                appContainer.apiKeyRepository.getApiKey()
 
             if (savedApiKey.isNullOrBlank()) {
                 appContainer.apiKeyRepository.saveApiKey(apiKey)
                 etApiKey.text.clear()
-                tvStatus.text = "API Key tersimpan. Buka kembali aplikasi dan masukkan API Key untuk verifikasi."
+
+                tvStatus.text =
+                    "API Key tersimpan. Buka kembali aplikasi dan masukkan API Key untuk verifikasi."
+
                 return@setOnClickListener
             }
 
             if (apiKey != savedApiKey) {
-                tvStatus.text = "API Key tidak cocok dengan yang tersimpan."
+                tvStatus.text =
+                    "API Key tidak cocok dengan yang tersimpan."
+
                 return@setOnClickListener
             }
 
+            navigationStarted = false
             etApiKey.text.clear()
 
-            tvStatus.text = "API Key tersimpan. Mengambil berita..."
+            tvStatus.text = "API Key cocok. Mengambil berita..."
             newsViewModel.getTopHeadlines("us")
         }
-
-
     }
 }
