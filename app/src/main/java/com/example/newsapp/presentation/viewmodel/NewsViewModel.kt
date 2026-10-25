@@ -1,3 +1,4 @@
+
 package com.example.newsapp.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -22,58 +23,72 @@ class NewsViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-private val _isLoading = MutableStateFlow(false)
-val isLoading: StateFlow<Boolean> = _isLoading
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     fun getTopHeadlines(country: String) {
         viewModelScope.launch {
             _errorMessage.value = null
-_isLoading.value = true
+            _isLoading.value = true
 
             try {
-                _articles.value = newsUseCase.getTopHeadlines(country)
+                _articles.value =
+                    newsUseCase.getTopHeadlines(country)
+
             } catch (e: CancellationException) {
                 throw e
+
             } catch (e: HttpException) {
                 val response = e.response()
+
                 val body = runCatching {
                     response?.errorBody()?.string().orEmpty()
                 }.getOrDefault("")
 
                 val headers = response?.headers()
-                val contentType = headers?.get("Content-Type").orEmpty()
-                val server = headers?.get("Server").orEmpty()
-                val via = headers?.get("Via").orEmpty()
+                val contentType =
+                    headers?.get("Content-Type").orEmpty()
+                val server =
+                    headers?.get("Server").orEmpty()
+                val via =
+                    headers?.get("Via").orEmpty()
 
                 val json = runCatching {
                     JSONObject(body)
                 }.getOrNull()
 
                 val code = json?.optString("code").orEmpty()
-                val message = json?.optString("message").orEmpty()
+                val message =
+                    json?.optString("message").orEmpty()
 
                 _errorMessage.value = buildString {
                     append("HTTP ${e.code()}")
+
                     if (code.isNotBlank()) {
                         append("\nKode: ")
                         append(code)
                     }
+
                     if (message.isNotBlank()) {
                         append("\nPesan: ")
                         append(message)
                     }
+
                     if (contentType.isNotBlank()) {
                         append("\nContent-Type: ")
                         append(contentType)
                     }
+
                     if (server.isNotBlank()) {
                         append("\nServer: ")
                         append(server)
                     }
+
                     if (via.isNotBlank()) {
                         append("\nVia: ")
                         append(via)
                     }
+
                     if (body.isNotBlank()) {
                         append("\nRespons: ")
                         append(body.take(300))
@@ -81,12 +96,16 @@ _isLoading.value = true
                         append("\nIsi respons kosong.")
                     }
                 }
+
             } catch (e: IOException) {
                 _errorMessage.value =
                     "Koneksi internet bermasalah. Periksa jaringan lalu coba lagi."
+
             } catch (e: Exception) {
                 _errorMessage.value =
-                    "Terjadi kesalahan saat mengambil berita. Silakan coba lagi." }finally {
+                    "Terjadi kesalahan saat mengambil berita. Silakan coba lagi."
+
+            } finally {
                 _isLoading.value = false
             }
         }
