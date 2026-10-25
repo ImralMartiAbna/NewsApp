@@ -22,9 +22,13 @@ class NewsViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+private val _isLoading = MutableStateFlow(false)
+val isLoading: StateFlow<Boolean> = _isLoading
+
     fun getTopHeadlines(country: String) {
         viewModelScope.launch {
             _errorMessage.value = null
+_isLoading.value = true
 
             try {
                 _articles.value = newsUseCase.getTopHeadlines(country)
@@ -82,7 +86,8 @@ class NewsViewModel(
                     "Koneksi internet bermasalah. Periksa jaringan lalu coba lagi."
             } catch (e: Exception) {
                 _errorMessage.value =
-                    "Terjadi kesalahan saat mengambil berita. Silakan coba lagi."
+                    "Terjadi kesalahan saat mengambil berita. Silakan coba lagi." }finally {
+                _isLoading.value = false
             }
         }
     }
