@@ -1,4 +1,3 @@
-
 package com.example.newsapp.presentation.adapter
 
 import android.graphics.drawable.Drawable
@@ -37,7 +36,6 @@ class ArticleAdapter(
     ): ArticleViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_article, parent, false)
-
         return ArticleViewHolder(view)
     }
 
@@ -93,7 +91,6 @@ class ArticleAdapter(
                     ?: "Deskripsi tidak tersedia"
 
             tvImageError.visibility = View.GONE
-
             clearImageRequest()
 
             val imageUrl = article.urlToImage
@@ -119,7 +116,7 @@ class ArticleAdapter(
                     override fun onLoadFailed(
                         e: GlideException?,
                         model: Any?,
-                        target: Target<Drawable>?,
+                        target: Target<Drawable>,
                         isFirstResource: Boolean
                     ): Boolean {
                         stopLoadingAnimation()
@@ -129,8 +126,8 @@ class ArticleAdapter(
 
                     override fun onResourceReady(
                         resource: Drawable,
-                        model: Any?,
-                        target: Target<Drawable>?,
+                        model: Any,
+                        target: Target<Drawable>,
                         dataSource: DataSource,
                         isFirstResource: Boolean
                     ): Boolean {
