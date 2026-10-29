@@ -35,6 +35,7 @@ class ArticleAdapter(
     ): ArticleViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_article, parent, false)
+
         return ArticleViewHolder(view)
     }
 
@@ -62,8 +63,6 @@ class ArticleAdapter(
         private val tvArticleTitle: TextView =
             itemView.findViewById(R.id.tvArticleTitle)
 
-        
-
         private val lottieImageLoading: LottieAnimationView =
             itemView.findViewById(R.id.lottieImageLoading)
 
@@ -80,10 +79,9 @@ class ArticleAdapter(
                 onArticleClick(article)
             }
 
+            // Kartu hanya menampilkan judul, tanpa deskripsi.
             tvArticleTitle.text =
                 article.title.ifBlank { "Judul tidak tersedia" }
-
-            
 
             tvImageError.visibility = View.GONE
             clearImageRequest()
@@ -97,8 +95,6 @@ class ArticleAdapter(
                 tvImageError.visibility = View.VISIBLE
                 return
             }
-
-            lottieImageLoading.visibility = View.GONE
 
             Glide.with(ivArticleImage)
                 .load(imageUrl)
@@ -120,14 +116,14 @@ class ArticleAdapter(
 
                     override fun onResourceReady(
                         resource: Drawable,
-    model: Any,
-    target: Target<Drawable>,
-    dataSource: DataSource,
-    isFirstResource: Boolean
-): Boolean {
-    stopLoadingAnimation()
-    tvImageError.visibility = View.GONE
-    return false
+                        model: Any,
+                        target: Target<Drawable>,
+                        dataSource: DataSource,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        stopLoadingAnimation()
+                        tvImageError.visibility = View.GONE
+                        return false
                     }
                 })
                 .into(ivArticleImage)
