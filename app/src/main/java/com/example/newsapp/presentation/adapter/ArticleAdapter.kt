@@ -124,13 +124,14 @@ class ArticleAdapter(
 
                     override fun onResourceReady(
                         resource: Drawable,
-                        model: Any,
-                        dataSource: DataSource,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        stopLoadingAnimation()
-                        tvImageError.visibility = View.GONE
-                        return false
+    model: Any,
+    target: Target<Drawable>,
+    dataSource: DataSource,
+    isFirstResource: Boolean
+): Boolean {
+    stopLoadingAnimation()
+    tvImageError.visibility = View.GONE
+    return false
                     }
                 })
                 .into(ivArticleImage)
