@@ -1,4 +1,3 @@
-
 package com.example.newsapp.presentation.adapter
 
 import android.graphics.drawable.Drawable
