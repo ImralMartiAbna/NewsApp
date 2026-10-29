@@ -1,65 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="248dp"
     android:layout_height="wrap_content"
     android:layout_marginEnd="12dp"
-    android:orientation="vertical"
-    android:padding="8dp"
-    android:background="#FFFFFF"
-    android:elevation="2dp">
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="6dp"
+    app:cardUseCompatPadding="true">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="145dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
 
-        <ImageView
-            android:id="@+id/ivArticleImage"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="Gambar berita"
-            android:scaleType="centerCrop"
-            android:src="@android:drawable/ic_menu_gallery" />
+            android:layout_height="145dp">
 
-        <com.airbnb.lottie.LottieAnimationView
-            android:id="@+id/lottieImageLoading"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:layout_gravity="center"
-            android:visibility="gone" />
+            <ImageView
+                android:id="@+id/ivArticleImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Gambar berita"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_menu_gallery" />
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/lottieImageLoading"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvImageError"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#EEEEEE"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="Gambar tidak tersedia"
+                android:textColor="#666666"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
         <TextView
-            android:id="@+id/tvImageError"
+            android:id="@+id/tvArticleTitle"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#EEEEEE"
-            android:gravity="center"
-            android:padding="8dp"
-            android:text="Gambar tidak tersedia"
-            android:textColor="#666666"
-            android:textSize="12sp"
-            android:visibility="gone" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:ellipsize="end"
+            android:maxLines="3"
+            android:textColor="#212121"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
-    </FrameLayout>
+    </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvArticleTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:ellipsize="end"
-        android:maxLines="3"
-        android:textColor="#212121"
-        android:textSize="16sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/tvArticleDescription"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:ellipsize="end"
-        android:maxLines="4"
-        android:textColor="#555555"
-        android:textSize="14sp" />
-
-</LinearLayout>
+</androidx.cardview.widget.CardView>
