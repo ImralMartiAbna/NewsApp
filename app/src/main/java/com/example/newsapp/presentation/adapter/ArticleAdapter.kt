@@ -62,8 +62,7 @@ class ArticleAdapter(
         private val tvArticleTitle: TextView =
             itemView.findViewById(R.id.tvArticleTitle)
 
-        private val tvArticleDescription: TextView =
-            itemView.findViewById(R.id.tvArticleDescription)
+        
 
         private val lottieImageLoading: LottieAnimationView =
             itemView.findViewById(R.id.lottieImageLoading)
@@ -84,10 +83,7 @@ class ArticleAdapter(
             tvArticleTitle.text =
                 article.title.ifBlank { "Judul tidak tersedia" }
 
-            tvArticleDescription.text =
-                article.description
-                    ?.takeIf { it.isNotBlank() }
-                    ?: "Deskripsi tidak tersedia"
+            
 
             tvImageError.visibility = View.GONE
             clearImageRequest()
