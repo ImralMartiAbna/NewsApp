@@ -1,3 +1,4 @@
+
 package com.example.newsapp.presentation.adapter
 
 import android.graphics.drawable.Drawable
@@ -8,7 +9,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
-import com.airbnb.lottie.LottieDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -73,8 +73,8 @@ class ArticleAdapter(
             itemView.findViewById(R.id.tvImageError)
 
         init {
-            lottieImageLoading.setAnimation("loading_gray.json")
-            lottieImageLoading.repeatCount = LottieDrawable.INFINITE
+            lottieImageLoading.cancelAnimation()
+            lottieImageLoading.visibility = View.GONE
         }
 
         fun bind(article: Article) {
@@ -103,8 +103,7 @@ class ArticleAdapter(
                 return
             }
 
-            lottieImageLoading.visibility = View.VISIBLE
-            lottieImageLoading.playAnimation()
+            lottieImageLoading.visibility = View.GONE
 
             Glide.with(ivArticleImage)
                 .load(imageUrl)
@@ -127,7 +126,6 @@ class ArticleAdapter(
                     override fun onResourceReady(
                         resource: Drawable,
                         model: Any,
-                        target: Target<Drawable>,
                         dataSource: DataSource,
                         isFirstResource: Boolean
                     ): Boolean {
