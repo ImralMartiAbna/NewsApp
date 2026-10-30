@@ -2,6 +2,7 @@
 package com.example.newsapp.presentation
 
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
@@ -11,6 +12,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
+import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.newsapp.MyApplication
 import com.example.newsapp.R
@@ -31,13 +34,17 @@ class MainActivity2 : AppCompatActivity() {
     private lateinit var btnRetryNews: Button
 
     private lateinit var articleAdapter: ArticleAdapter
+    private lateinit var layoutManager: LinearLayoutManager
 
     private val newsViewModel
         get() = (application as MyApplication)
             .appContainer.newsViewModel
 
+    private val snapHelper = PagerSnapHelper()
+
     private var autoScrollJob: Job? = null
     private var userIsDragging = false
+    private var direction = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,20 +61,26 @@ class MainActivity2 : AppCompatActivity() {
             openArticleDetail(article)
         }
 
-        rvMainNews.layoutManager = LinearLayoutManager(
+        layoutManager = LinearLayoutManager(
             this,
             LinearLayoutManager.HORIZONTAL,
             false
         )
+
+        rvMainNews.layoutManager = layoutManager
         rvMainNews.adapter = articleAdapter
+
+        snapHelper.attachToRecyclerView(rvMainNews)
 
         rvMainNews.addOnScrollListener(
             object : RecyclerView.OnScrollListener() {
+
                 override fun onScrollStateChanged(
                     recyclerView: RecyclerView,
                     newState: Int
                 ) {
                     when (newState) {
+
                         RecyclerView.SCROLL_STATE_DRAGGING -> {
                             userIsDragging = true
                             stopAutoScroll()
@@ -76,7 +89,11 @@ class MainActivity2 : AppCompatActivity() {
                         RecyclerView.SCROLL_STATE_IDLE -> {
                             if (userIsDragging) {
                                 userIsDragging = false
-                                startAutoScroll()
+
+                                lifecycleScope.launch {
+                                    delay(400)
+                                    startAutoScroll()
+                                }
                             }
                         }
                     }
@@ -94,9 +111,12 @@ class MainActivity2 : AppCompatActivity() {
     private fun observeNews() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+
                 launch {
                     newsViewModel.articles.collect { articles ->
+
                         articleAdapter.updateArticles(articles)
+
                         tvNewsCount.text =
                             if (articles.isEmpty()) {
                                 "Belum ada berita"
@@ -105,7 +125,12 @@ class MainActivity2 : AppCompatActivity() {
                             }
 
                         if (articles.isNotEmpty()) {
-                            startAutoScroll()
+                            direction = 1
+                            rvMainNews.scrollToPosition(0)
+
+                            rvMainNews.post {
+                                startAutoScroll()
+                            }
                         } else {
                             stopAutoScroll()
                         }
@@ -122,9 +147,11 @@ class MainActivity2 : AppCompatActivity() {
 
                 launch {
                     newsViewModel.errorMessage.collect { message ->
+
                         if (!message.isNullOrBlank()) {
                             tvNewsError.text = message
                         }
+
                         updateNewsState()
                     }
                 }
@@ -133,21 +160,31 @@ class MainActivity2 : AppCompatActivity() {
     }
 
     private fun updateNewsState() {
+
         val loading = newsViewModel.isLoading.value
         val error = newsViewModel.errorMessage.value
         val articles = newsViewModel.articles.value
 
         layoutNewsLoading.visibility =
-            if (loading && articles.isEmpty()) View.VISIBLE
-            else View.GONE
+            if (loading && articles.isEmpty()) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
 
         layoutNewsError.visibility =
-            if (!loading && !error.isNullOrBlank()) View.VISIBLE
-            else View.GONE
+            if (!loading && !error.isNullOrBlank()) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
 
         rvMainNews.visibility =
-            if (articles.isNotEmpty()) View.VISIBLE
-            else View.GONE
+            if (articles.isNotEmpty()) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
 
         if (loading && articles.isEmpty()) {
             tvNewsCount.text = "Memuat berita..."
@@ -155,42 +192,91 @@ class MainActivity2 : AppCompatActivity() {
     }
 
     private fun startAutoScroll() {
+
         if (autoScrollJob?.isActive == true) return
         if (!::articleAdapter.isInitialized) return
         if (articleAdapter.itemCount < 2) return
 
         autoScrollJob = lifecycleScope.launch {
-            var direction = 1
 
             while (isActive) {
-                delay(35)
 
                 if (userIsDragging || !rvMainNews.isShown) {
+                    delay(100)
                     continue
                 }
 
-                val layoutManager =
-                    rvMainNews.layoutManager as? LinearLayoutManager
-                        ?: continue
+                val snapView = snapHelper.findSnapView(layoutManager)
+                val currentPosition = snapView?.let {
+                    layoutManager.getPosition(it)
+                } ?: layoutManager.findFirstVisibleItemPosition()
 
-                val lastPosition =
-                    layoutManager.findLastCompletelyVisibleItemPosition()
+                if (currentPosition == RecyclerView.NO_POSITION) {
+                    delay(100)
+                    continue
+                }
 
-                val firstPosition =
-                    layoutManager.findFirstCompletelyVisibleItemPosition()
+                val lastPosition = articleAdapter.itemCount - 1
 
-                if (
-                    direction > 0 &&
-                    lastPosition >= articleAdapter.itemCount - 1
-                ) {
+                if (direction > 0 && currentPosition >= lastPosition) {
                     direction = -1
-                } else if (direction < 0 && firstPosition <= 0) {
+                } else if (direction < 0 && currentPosition <= 0) {
                     direction = 1
                 }
 
-                rvMainNews.scrollBy(direction * 2, 0)
+                val targetPosition = currentPosition + direction
+
+                val duration = if (direction > 0) {
+                    500
+                } else {
+                    50
+                }
+
+                smoothScrollToPosition(targetPosition, duration)
+
+                while (
+                    isActive &&
+                    rvMainNews.scrollState != RecyclerView.SCROLL_STATE_IDLE
+                ) {
+                    delay(16)
+                }
+
+                if (direction > 0) {
+                    delay(3000)
+                }
             }
         }
+    }
+
+    private fun smoothScrollToPosition(
+        position: Int,
+        duration: Int
+    ) {
+
+        val smoothScroller =
+            object : LinearSmoothScroller(this) {
+
+                override fun calculateTimeForScrolling(
+                    dx: Int
+                ): Int {
+                    return duration
+                }
+
+                override fun calculateTimeForDeceleration(
+                    dx: Int
+                ): Int {
+                    return duration
+                }
+
+                override fun calculateSpeedPerPixel(
+                    displayMetrics: DisplayMetrics
+                ): Float {
+                    return 1f
+                }
+            }
+
+        smoothScroller.targetPosition = position
+        layoutManager.startSmoothScroll(smoothScroller)
     }
 
     private fun stopAutoScroll() {
