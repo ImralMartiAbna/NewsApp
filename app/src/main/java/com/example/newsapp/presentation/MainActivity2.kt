@@ -190,62 +190,97 @@ class MainActivity2 : AppCompatActivity() {
         }
     }
 
-    private fun startAutoScroll() {
+    
+private fun startAutoScroll() {
 
-        if (autoScrollJob?.isActive == true) return
-        if (!::articleAdapter.isInitialized) return
-        if (articleAdapter.itemCount < 2) return
+    if (autoScrollJob?.isActive == true) return
+    if (!::articleAdapter.isInitialized) return
+    if (articleAdapter.itemCount < 2) return
 
-        autoScrollJob = lifecycleScope.launch {
+    autoScrollJob = lifecycleScope.launch {
 
+        while (isActive) {
+
+            if (userIsDragging || !rvMainNews.isShown) {
+                delay(100)
+                continue
+            }
+
+            val lastPosition = articleAdapter.itemCount - 1
+
+            val snapView = snapHelper.findSnapView(layoutManager)
+
+            val currentPosition = snapView?.let {
+                layoutManager.getPosition(it)
+            } ?: layoutManager.findFirstVisibleItemPosition()
+
+            if (currentPosition == RecyclerView.NO_POSITION) {
+                delay(100)
+                continue
+            }
+
+            // PEMBALIKAN DI KARTU TERAKHIR
+            if (currentPosition >= lastPosition && direction > 0) {
+
+                // Berhenti 3 detik pada kartu terakhir
+                delay(3000)
+
+                if (userIsDragging) continue
+
+                // Balik arah ke kiri
+                direction = -1
+            }
+
+            // PEMBALIKAN DI KARTU PERTAMA
+            if (currentPosition <= 0 && direction < 0) {
+                direction = 1
+            }
+
+            val targetPosition = currentPosition + direction
+
+            if (targetPosition !in 0..lastPosition) {
+                continue
+            }
+
+            val duration = if (direction > 0) {
+                500
+            } else {
+                50
+            }
+
+            smoothScrollToPosition(targetPosition, duration)
+
+            // Tunggu sampai kartu tujuan benar-benar selesai
+            // dan sudah berada pada posisi snap.
             while (isActive) {
 
-                if (userIsDragging || !rvMainNews.isShown) {
-                    delay(100)
-                    continue
-                }
+                val snappedView =
+                    snapHelper.findSnapView(layoutManager)
 
-                val snapView = snapHelper.findSnapView(layoutManager)
-                val currentPosition = snapView?.let {
+                val snappedPosition = snappedView?.let {
                     layoutManager.getPosition(it)
-                } ?: layoutManager.findFirstVisibleItemPosition()
-
-                if (currentPosition == RecyclerView.NO_POSITION) {
-                    delay(100)
-                    continue
                 }
 
-                val lastPosition = articleAdapter.itemCount - 1
-
-                if (direction > 0 && currentPosition >= lastPosition) {
-                    direction = -1
-                } else if (direction < 0 && currentPosition <= 0) {
-                    direction = 1
-                }
-
-                val targetPosition = currentPosition + direction
-
-                val duration = if (direction > 0) {
-                    500
-                } else {
-                    50
-                }
-
-                smoothScrollToPosition(targetPosition, duration)
-
-                while (
-                    isActive &&
-                    rvMainNews.scrollState != RecyclerView.SCROLL_STATE_IDLE
+                if (
+                    rvMainNews.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
+                    snappedPosition == targetPosition
                 ) {
-                    delay(16)
+                    break
                 }
 
-                if (direction > 0) {
-                    delay(3000)
-                }
+                if (userIsDragging) break
+
+                delay(16)
+            }
+
+            // Jeda hanya ketika bergerak maju.
+            if (direction > 0 && !userIsDragging) {
+                delay(3000)
             }
         }
     }
+}
+
 
     private fun smoothScrollToPosition(
         position: Int,
