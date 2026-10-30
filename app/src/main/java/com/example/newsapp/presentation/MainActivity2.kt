@@ -1,4 +1,3 @@
-
 package com.example.newsapp.presentation
 
 import android.os.Bundle
