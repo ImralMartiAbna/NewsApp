@@ -1,4 +1,4 @@
-sudahpackage com.example.newsapp.presentation
+package com.example.newsapp.presentation
 
 import android.os.Bundle
 import android.util.DisplayMetrics
