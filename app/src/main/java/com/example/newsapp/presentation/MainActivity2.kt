@@ -191,6 +191,7 @@ class MainActivity2 : AppCompatActivity() {
     }
 
     
+
 private fun startAutoScroll() {
 
     if (autoScrollJob?.isActive == true) return
@@ -219,20 +220,25 @@ private fun startAutoScroll() {
                 continue
             }
 
-            // PEMBALIKAN DI KARTU TERAKHIR
+            // Jika mencapai kartu terakhir saat maju,
+            // tunggu 3 detik sebelum berbalik.
             if (currentPosition >= lastPosition && direction > 0) {
 
-                // Berhenti 3 detik pada kartu terakhir
                 delay(3000)
 
                 if (userIsDragging) continue
 
-                // Balik arah ke kiri
                 direction = -1
             }
 
-            // PEMBALIKAN DI KARTU PERTAMA
+            // Jika mencapai kartu pertama saat mundur,
+            // tunggu 3 detik sebelum maju kembali.
             if (currentPosition <= 0 && direction < 0) {
+
+                delay(3000)
+
+                if (userIsDragging) continue
+
                 direction = 1
             }
 
@@ -250,8 +256,8 @@ private fun startAutoScroll() {
 
             smoothScrollToPosition(targetPosition, duration)
 
-            // Tunggu sampai kartu tujuan benar-benar selesai
-            // dan sudah berada pada posisi snap.
+            // Tunggu hingga animasi selesai dan kartu
+            // tujuan benar-benar berada pada posisi snap.
             while (isActive) {
 
                 val snappedView =
@@ -273,13 +279,15 @@ private fun startAutoScroll() {
                 delay(16)
             }
 
-            // Jeda hanya ketika bergerak maju.
+            // Jeda baca 3 detik setelah setiap kartu maju.
+            // Tidak ada jeda setelah kartu mundur.
             if (direction > 0 && !userIsDragging) {
                 delay(3000)
             }
         }
     }
 }
+
 
 
     private fun smoothScrollToPosition(
