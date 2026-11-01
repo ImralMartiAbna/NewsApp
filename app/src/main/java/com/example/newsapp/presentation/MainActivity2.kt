@@ -1,4 +1,4 @@
-package com.example.newsapp.presentation
+sudahpackage com.example.newsapp.presentation
 
 import android.os.Bundle
 import android.util.DisplayMetrics
@@ -192,6 +192,7 @@ class MainActivity2 : AppCompatActivity() {
 
     
 
+
 private fun startAutoScroll() {
 
     if (autoScrollJob?.isActive == true) return
@@ -220,19 +221,15 @@ private fun startAutoScroll() {
                 continue
             }
 
-            // Jika mencapai kartu terakhir saat maju,
-            // tunggu 3 detik sebelum berbalik.
+            // Kartu terakhir:
+            // Jeda 3 detik sudah diberikan setelah
+            // animasi maju selesai. Cukup balik arah.
             if (currentPosition >= lastPosition && direction > 0) {
-
-                delay(3000)
-
-                if (userIsDragging) continue
-
                 direction = -1
             }
 
-            // Jika mencapai kartu pertama saat mundur,
-            // tunggu 3 detik sebelum maju kembali.
+            // Kartu pertama:
+            // Beri jeda 3 detik sebelum bergerak maju lagi.
             if (currentPosition <= 0 && direction < 0) {
 
                 delay(3000)
@@ -256,8 +253,8 @@ private fun startAutoScroll() {
 
             smoothScrollToPosition(targetPosition, duration)
 
-            // Tunggu hingga animasi selesai dan kartu
-            // tujuan benar-benar berada pada posisi snap.
+            // Tunggu sampai animasi selesai dan kartu
+            // tujuan berada pada posisi snap.
             while (isActive) {
 
                 val snappedView =
@@ -279,14 +276,16 @@ private fun startAutoScroll() {
                 delay(16)
             }
 
-            // Jeda baca 3 detik setelah setiap kartu maju.
-            // Tidak ada jeda setelah kartu mundur.
+            // Jeda baca 3 detik setelah setiap
+            // perpindahan maju, termasuk kartu terakhir.
+            // Tidak ada jeda setelah perpindahan mundur.
             if (direction > 0 && !userIsDragging) {
                 delay(3000)
             }
         }
     }
 }
+
 
 
 
