@@ -1,9 +1,12 @@
+
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#FFFFFF">
+
+    <!-- BERITA UTAMA -->
 
     <TextView
         android:layout_width="match_parent"
@@ -98,6 +101,8 @@
         android:layout_marginTop="12dp"
         android:background="#EEEEEE" />
 
+    <!-- KATEGORI BERITA -->
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -126,45 +131,85 @@
                 android:textColor="#757575"
                 android:textSize="14sp" />
 
+            <!-- TEKNOLOGI -->
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:padding="16dp"
-                android:background="#F5F5F5"
+                android:layout_marginBottom="8dp"
                 android:text="Teknologi"
                 android:textColor="#212121"
-                android:textSize="16sp" />
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvTechnology"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never" />
+
+            <!-- BISNIS -->
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:padding="16dp"
-                android:background="#F5F5F5"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
                 android:text="Bisnis"
                 android:textColor="#212121"
-                android:textSize="16sp" />
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvBusiness"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never" />
+
+            <!-- OLAHRAGA -->
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:padding="16dp"
-                android:background="#F5F5F5"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
                 android:text="Olahraga"
                 android:textColor="#212121"
-                android:textSize="16sp" />
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvSports"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never" />
+
+            <!-- KESEHATAN -->
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:padding="16dp"
-                android:background="#F5F5F5"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
                 android:text="Kesehatan"
                 android:textColor="#212121"
-                android:textSize="16sp" />
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvHealth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never" />
 
         </LinearLayout>
     </ScrollView>
