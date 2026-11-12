@@ -8,8 +8,13 @@ class NewsInteractor(
 ) : NewsUseCase {
 
     override suspend fun getTopHeadlines(
-        country: String
+        country: String,
+        category: String?
     ): List<Article> {
-        return newsRepository.getTopHeadlines(country)
+
+        return newsRepository.getTopHeadlines(
+            country = country,
+            category = category
+        )
     }
 }
