@@ -12,7 +12,8 @@ class NewsRepositoryImpl(
 ) : NewsRepository {
 
     override suspend fun getTopHeadlines(
-        country: String
+        country: String,
+        category: String?
     ): List<Article> {
 
         val apiKey = apiKeyRepository.getApiKey()
@@ -20,7 +21,8 @@ class NewsRepositoryImpl(
 
         val response = remoteDataSource.getTopHeadlines(
             country = country,
-            apiKey = apiKey
+            apiKey = apiKey,
+            category = category
         )
 
         return response.articles.map {
