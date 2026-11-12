@@ -1,4 +1,3 @@
-
 package com.example.newsapp.data.remote
 
 import android.util.Log
