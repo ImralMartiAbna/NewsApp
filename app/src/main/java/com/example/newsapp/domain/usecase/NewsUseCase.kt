@@ -6,6 +6,7 @@ import com.example.newsapp.domain.repository.NewsRepository
 interface NewsUseCase {
 
     suspend fun getTopHeadlines(
-        country: String
+        country: String,
+        category: String? = null
     ): List<Article>
 }
