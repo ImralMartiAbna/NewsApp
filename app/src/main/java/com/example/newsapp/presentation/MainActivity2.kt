@@ -18,6 +18,7 @@ import com.example.newsapp.MyApplication
 import com.example.newsapp.R
 import com.example.newsapp.domain.model.Article
 import com.example.newsapp.presentation.adapter.ArticleAdapter
+import com.example.newsapp.presentation.adapter.CategoryArticleAdapter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -25,6 +26,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity2 : AppCompatActivity() {
 
+    // BERITA UTAMA
     private lateinit var rvMainNews: RecyclerView
     private lateinit var tvNewsCount: TextView
     private lateinit var layoutNewsLoading: LinearLayout
@@ -35,10 +37,23 @@ class MainActivity2 : AppCompatActivity() {
     private lateinit var articleAdapter: ArticleAdapter
     private lateinit var layoutManager: LinearLayoutManager
 
+    // RECYCLERVIEW KATEGORI
+    private lateinit var rvTechnology: RecyclerView
+    private lateinit var rvBusiness: RecyclerView
+    private lateinit var rvSports: RecyclerView
+    private lateinit var rvHealth: RecyclerView
+
+    // ADAPTER KATEGORI
+    private lateinit var technologyAdapter: CategoryArticleAdapter
+    private lateinit var businessAdapter: CategoryArticleAdapter
+    private lateinit var sportsAdapter: CategoryArticleAdapter
+    private lateinit var healthAdapter: CategoryArticleAdapter
+
     private val newsViewModel
         get() = (application as MyApplication)
             .appContainer.newsViewModel
 
+    // SNAP HANYA UNTUK BERITA UTAMA
     private val snapHelper = PagerSnapHelper()
 
     private var autoScrollJob: Job? = null
@@ -49,6 +64,7 @@ class MainActivity2 : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
 
+        // BERITA UTAMA
         rvMainNews = findViewById(R.id.rvMainNews)
         tvNewsCount = findViewById(R.id.tvNewsCount)
         layoutNewsLoading = findViewById(R.id.layoutNewsLoading)
@@ -69,6 +85,7 @@ class MainActivity2 : AppCompatActivity() {
         rvMainNews.layoutManager = layoutManager
         rvMainNews.adapter = articleAdapter
 
+        // SNAP HANYA DIPASANG PADA BERITA UTAMA
         snapHelper.attachToRecyclerView(rvMainNews)
 
         rvMainNews.addOnScrollListener(
@@ -104,8 +121,83 @@ class MainActivity2 : AppCompatActivity() {
             newsViewModel.getTopHeadlines("us")
         }
 
+        setupCategoryRecyclerViews()
+
         observeNews()
+        observeCategoryNews()
+
+        newsViewModel.getTechnologyNews("us")
+        newsViewModel.getBusinessNews("us")
+        newsViewModel.getSportsNews("us")
+        newsViewModel.getHealthNews("us")
     }
+
+    // =================================================
+    // RECYCLERVIEW KATEGORI - MANUAL FREE SCROLL
+    // =================================================
+
+    private fun setupCategoryRecyclerViews() {
+
+        rvTechnology = findViewById(R.id.rvTechnology)
+        rvBusiness = findViewById(R.id.rvBusiness)
+        rvSports = findViewById(R.id.rvSports)
+        rvHealth = findViewById(R.id.rvHealth)
+
+        technologyAdapter = CategoryArticleAdapter()
+        businessAdapter = CategoryArticleAdapter()
+        sportsAdapter = CategoryArticleAdapter()
+        healthAdapter = CategoryArticleAdapter()
+
+        setupManualHorizontalRecyclerView(
+            rvTechnology,
+            technologyAdapter
+        )
+
+        setupManualHorizontalRecyclerView(
+            rvBusiness,
+            businessAdapter
+        )
+
+        setupManualHorizontalRecyclerView(
+            rvSports,
+            sportsAdapter
+        )
+
+        setupManualHorizontalRecyclerView(
+            rvHealth,
+            healthAdapter
+        )
+    }
+
+    // Semua kategori menggunakan gerakan horizontal bawaan Android.
+    // Tidak memakai PagerSnapHelper, SmoothScroller, atau auto-scroll.
+
+    private fun setupManualHorizontalRecyclerView(
+        recyclerView: RecyclerView,
+        adapter: CategoryArticleAdapter
+    ) {
+
+        recyclerView.layoutManager = LinearLayoutManager(
+            this,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+
+        recyclerView.adapter = adapter
+
+        recyclerView.isNestedScrollingEnabled = false
+        recyclerView.isHorizontalScrollBarEnabled = false
+        recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
+
+        // Pertahankan sentuhan dan momentum scroll bawaan RecyclerView.
+        recyclerView.setOnTouchListener { _, _ ->
+            false
+        }
+    }
+
+    // =================================================
+    // OBSERVASI BERITA UTAMA
+    // =================================================
 
     private fun observeNews() {
         lifecycleScope.launch {
@@ -158,6 +250,45 @@ class MainActivity2 : AppCompatActivity() {
         }
     }
 
+    // =================================================
+    // OBSERVASI EMPAT KATEGORI BERITA
+    // =================================================
+
+    private fun observeCategoryNews() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+
+                launch {
+                    newsViewModel.technologyArticles.collect { articles ->
+                        technologyAdapter.submitList(articles)
+                    }
+                }
+
+                launch {
+                    newsViewModel.businessArticles.collect { articles ->
+                        businessAdapter.submitList(articles)
+                    }
+                }
+
+                launch {
+                    newsViewModel.sportsArticles.collect { articles ->
+                        sportsAdapter.submitList(articles)
+                    }
+                }
+
+                launch {
+                    newsViewModel.healthArticles.collect { articles ->
+                        healthAdapter.submitList(articles)
+                    }
+                }
+            }
+        }
+    }
+
+    // =================================================
+    // STATUS BERITA UTAMA
+    // =================================================
+
     private fun updateNewsState() {
 
         val loading = newsViewModel.isLoading.value
@@ -190,104 +321,92 @@ class MainActivity2 : AppCompatActivity() {
         }
     }
 
-    
+    // =================================================
+    // AUTO SCROLL KHUSUS BERITA UTAMA
+    // =================================================
 
+    private fun startAutoScroll() {
 
-private fun startAutoScroll() {
+        if (autoScrollJob?.isActive == true) return
+        if (!::articleAdapter.isInitialized) return
+        if (articleAdapter.itemCount < 2) return
 
-    if (autoScrollJob?.isActive == true) return
-    if (!::articleAdapter.isInitialized) return
-    if (articleAdapter.itemCount < 2) return
+        autoScrollJob = lifecycleScope.launch {
 
-    autoScrollJob = lifecycleScope.launch {
-
-        while (isActive) {
-
-            if (userIsDragging || !rvMainNews.isShown) {
-                delay(100)
-                continue
-            }
-
-            val lastPosition = articleAdapter.itemCount - 1
-
-            val snapView = snapHelper.findSnapView(layoutManager)
-
-            val currentPosition = snapView?.let {
-                layoutManager.getPosition(it)
-            } ?: layoutManager.findFirstVisibleItemPosition()
-
-            if (currentPosition == RecyclerView.NO_POSITION) {
-                delay(100)
-                continue
-            }
-
-            // Kartu terakhir:
-            // Jeda 3 detik sudah diberikan setelah
-            // animasi maju selesai. Cukup balik arah.
-            if (currentPosition >= lastPosition && direction > 0) {
-                direction = -1
-            }
-
-            // Kartu pertama:
-            // Beri jeda 3 detik sebelum bergerak maju lagi.
-            if (currentPosition <= 0 && direction < 0) {
-
-                delay(3000)
-
-                if (userIsDragging) continue
-
-                direction = 1
-            }
-
-            val targetPosition = currentPosition + direction
-
-            if (targetPosition !in 0..lastPosition) {
-                continue
-            }
-
-            val duration = if (direction > 0) {
-                500
-            } else {
-                50
-            }
-
-            smoothScrollToPosition(targetPosition, duration)
-
-            // Tunggu sampai animasi selesai dan kartu
-            // tujuan berada pada posisi snap.
             while (isActive) {
 
-                val snappedView =
-                    snapHelper.findSnapView(layoutManager)
+                if (userIsDragging || !rvMainNews.isShown) {
+                    delay(100)
+                    continue
+                }
 
-                val snappedPosition = snappedView?.let {
+                val lastPosition = articleAdapter.itemCount - 1
+
+                val snapView = snapHelper.findSnapView(layoutManager)
+
+                val currentPosition = snapView?.let {
                     layoutManager.getPosition(it)
+                } ?: layoutManager.findFirstVisibleItemPosition()
+
+                if (currentPosition == RecyclerView.NO_POSITION) {
+                    delay(100)
+                    continue
                 }
 
-                if (
-                    rvMainNews.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
-                    snappedPosition == targetPosition
-                ) {
-                    break
+                if (currentPosition >= lastPosition && direction > 0) {
+                    direction = -1
                 }
 
-                if (userIsDragging) break
+                if (currentPosition <= 0 && direction < 0) {
 
-                delay(16)
-            }
+                    delay(3000)
 
-            // Jeda baca 3 detik setelah setiap
-            // perpindahan maju, termasuk kartu terakhir.
-            // Tidak ada jeda setelah perpindahan mundur.
-            if (direction > 0 && !userIsDragging) {
-                delay(3000)
+                    if (userIsDragging) continue
+
+                    direction = 1
+                }
+
+                val targetPosition = currentPosition + direction
+
+                if (targetPosition !in 0..lastPosition) {
+                    continue
+                }
+
+                val duration = if (direction > 0) {
+                    500
+                } else {
+                    50
+                }
+
+                smoothScrollToPosition(targetPosition, duration)
+
+                while (isActive) {
+
+                    val snappedView =
+                        snapHelper.findSnapView(layoutManager)
+
+                    val snappedPosition = snappedView?.let {
+                        layoutManager.getPosition(it)
+                    }
+
+                    if (
+                        rvMainNews.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
+                        snappedPosition == targetPosition
+                    ) {
+                        break
+                    }
+
+                    if (userIsDragging) break
+
+                    delay(16)
+                }
+
+                if (direction > 0 && !userIsDragging) {
+                    delay(3000)
+                }
             }
         }
     }
-}
-
-
-
 
     private fun smoothScrollToPosition(
         position: Int,
@@ -324,6 +443,10 @@ private fun startAutoScroll() {
         autoScrollJob?.cancel()
         autoScrollJob = null
     }
+
+    // =================================================
+    // DETAIL BERITA
+    // =================================================
 
     private fun openArticleDetail(article: Article) {
         // Navigasi ke NewsDetailActivity akan ditambahkan
