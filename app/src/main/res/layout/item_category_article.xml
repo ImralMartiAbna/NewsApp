@@ -2,34 +2,38 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="57dp"
-    android:layout_height="wrap_content"
+    android:layout_width="170dp"
+    android:layout_height="280dp"
     android:layout_marginEnd="8dp"
-    app:cardCornerRadius="6dp"
-    app:cardElevation="2dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="6dp"
     app:cardUseCompatPadding="false">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:background="#FFFFFF">
 
         <ImageView
             android:id="@+id/ivCategoryArticle"
             android:layout_width="match_parent"
-            android:layout_height="95dp"
+            android:layout_height="190dp"
+            android:background="#E0E0E0"
             android:scaleType="centerCrop"
             android:contentDescription="Gambar berita" />
 
         <TextView
             android:id="@+id/tvCategoryArticleTitle"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="3dp"
-            android:textSize="10sp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="8dp"
+            android:gravity="top"
+            android:textSize="14sp"
             android:textColor="#222222"
-            android:maxLines="2"
+            android:textStyle="bold"
+            android:maxLines="3"
             android:ellipsize="end" />
 
     </LinearLayout>
