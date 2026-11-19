@@ -43,6 +43,12 @@ class MainActivity2 : AppCompatActivity() {
     private lateinit var rvSports: RecyclerView
     private lateinit var rvHealth: RecyclerView
 
+    // LOADING SKELETON KATEGORI
+    private lateinit var loadingTechnology: LinearLayout
+    private lateinit var loadingBusiness: LinearLayout
+    private lateinit var loadingSports: LinearLayout
+    private lateinit var loadingHealth: LinearLayout
+
     // ADAPTER KATEGORI
     private lateinit var technologyAdapter: CategoryArticleAdapter
     private lateinit var businessAdapter: CategoryArticleAdapter
@@ -126,6 +132,7 @@ class MainActivity2 : AppCompatActivity() {
         observeNews()
         observeCategoryNews()
 
+        // MEMUAT EMPAT KATEGORI SECARA INDEPENDEN
         newsViewModel.getTechnologyNews("us")
         newsViewModel.getBusinessNews("us")
         newsViewModel.getSportsNews("us")
@@ -133,7 +140,7 @@ class MainActivity2 : AppCompatActivity() {
     }
 
     // =================================================
-    // RECYCLERVIEW KATEGORI - MANUAL FREE SCROLL
+    // RECYCLERVIEW KATEGORI
     // =================================================
 
     private fun setupCategoryRecyclerViews() {
@@ -142,6 +149,12 @@ class MainActivity2 : AppCompatActivity() {
         rvBusiness = findViewById(R.id.rvBusiness)
         rvSports = findViewById(R.id.rvSports)
         rvHealth = findViewById(R.id.rvHealth)
+
+        // ID LOADING DARI activity_main2.xml
+        loadingTechnology = findViewById(R.id.loadingTechnology)
+        loadingBusiness = findViewById(R.id.loadingBusiness)
+        loadingSports = findViewById(R.id.loadingSports)
+        loadingHealth = findViewById(R.id.loadingHealth)
 
         technologyAdapter = CategoryArticleAdapter()
         businessAdapter = CategoryArticleAdapter()
@@ -169,8 +182,8 @@ class MainActivity2 : AppCompatActivity() {
         )
     }
 
-    // Semua kategori menggunakan gerakan horizontal bawaan Android.
-    // Tidak memakai PagerSnapHelper, SmoothScroller, atau auto-scroll.
+    // Semua kategori menggunakan scroll horizontal bawaan Android.
+    // Tidak menggunakan PagerSnapHelper atau auto-scroll.
 
     private fun setupManualHorizontalRecyclerView(
         recyclerView: RecyclerView,
@@ -189,7 +202,6 @@ class MainActivity2 : AppCompatActivity() {
         recyclerView.isHorizontalScrollBarEnabled = false
         recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
 
-        // Pertahankan sentuhan dan momentum scroll bawaan RecyclerView.
         recyclerView.setOnTouchListener { _, _ ->
             false
         }
@@ -200,6 +212,7 @@ class MainActivity2 : AppCompatActivity() {
     // =================================================
 
     private fun observeNews() {
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
 
@@ -255,30 +268,87 @@ class MainActivity2 : AppCompatActivity() {
     // =================================================
 
     private fun observeCategoryNews() {
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
 
+                // TEKNOLOGI
                 launch {
                     newsViewModel.technologyArticles.collect { articles ->
                         technologyAdapter.submitList(articles)
+                        updateTechnologyState()
                     }
                 }
 
+                launch {
+                    newsViewModel.technologyLoading.collect {
+                        updateTechnologyState()
+                    }
+                }
+
+                launch {
+                    newsViewModel.technologyError.collect {
+                        updateTechnologyState()
+                    }
+                }
+
+                // BISNIS
                 launch {
                     newsViewModel.businessArticles.collect { articles ->
                         businessAdapter.submitList(articles)
+                        updateBusinessState()
                     }
                 }
 
+                launch {
+                    newsViewModel.businessLoading.collect {
+                        updateBusinessState()
+                    }
+                }
+
+                launch {
+                    newsViewModel.businessError.collect {
+                        updateBusinessState()
+                    }
+                }
+
+                // OLAHRAGA
                 launch {
                     newsViewModel.sportsArticles.collect { articles ->
                         sportsAdapter.submitList(articles)
+                        updateSportsState()
                     }
                 }
 
                 launch {
+                    newsViewModel.sportsLoading.collect {
+                        updateSportsState()
+                    }
+                }
+
+                launch {
+                    newsViewModel.sportsError.collect {
+                        updateSportsState()
+                    }
+                }
+
+                // KESEHATAN
+                launch {
                     newsViewModel.healthArticles.collect { articles ->
                         healthAdapter.submitList(articles)
+                        updateHealthState()
+                    }
+                }
+
+                launch {
+                    newsViewModel.healthLoading.collect {
+                        updateHealthState()
+                    }
+                }
+
+                launch {
+                    newsViewModel.healthError.collect {
+                        updateHealthState()
                     }
                 }
             }
@@ -319,6 +389,73 @@ class MainActivity2 : AppCompatActivity() {
         if (loading && articles.isEmpty()) {
             tvNewsCount.text = "Memuat berita..."
         }
+    }
+
+    // =================================================
+    // STATUS KATEGORI
+    // =================================================
+
+    private fun updateTechnologyState() {
+
+        updateCategoryState(
+            rvTechnology,
+            loadingTechnology,
+            newsViewModel.technologyLoading.value,
+            newsViewModel.technologyArticles.value
+        )
+    }
+
+    private fun updateBusinessState() {
+
+        updateCategoryState(
+            rvBusiness,
+            loadingBusiness,
+            newsViewModel.businessLoading.value,
+            newsViewModel.businessArticles.value
+        )
+    }
+
+    private fun updateSportsState() {
+
+        updateCategoryState(
+            rvSports,
+            loadingSports,
+            newsViewModel.sportsLoading.value,
+            newsViewModel.sportsArticles.value
+        )
+    }
+
+    private fun updateHealthState() {
+
+        updateCategoryState(
+            rvHealth,
+            loadingHealth,
+            newsViewModel.healthLoading.value,
+            newsViewModel.healthArticles.value
+        )
+    }
+
+    // Fungsi umum untuk mengatur loading setiap kategori.
+    private fun updateCategoryState(
+        recyclerView: RecyclerView,
+        loadingLayout: LinearLayout,
+        loading: Boolean,
+        articles: List<Article>
+    ) {
+
+        loadingLayout.visibility =
+            if (loading && articles.isEmpty()) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+
+        recyclerView.visibility =
+            if (articles.isNotEmpty()) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
     }
 
     // =================================================
@@ -416,15 +553,11 @@ class MainActivity2 : AppCompatActivity() {
         val smoothScroller =
             object : LinearSmoothScroller(this) {
 
-                override fun calculateTimeForScrolling(
-                    dx: Int
-                ): Int {
+                override fun calculateTimeForScrolling(dx: Int): Int {
                     return duration
                 }
 
-                override fun calculateTimeForDeceleration(
-                    dx: Int
-                ): Int {
+                override fun calculateTimeForDeceleration(dx: Int): Int {
                     return duration
                 }
 
