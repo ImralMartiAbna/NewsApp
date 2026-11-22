@@ -74,15 +74,4 @@ class CategoryArticleAdapter :
         articles.addAll(newArticles)
         notifyDataSetChanged()
     }
-
-    override fun onViewRecycled(
-        holder: CategoryArticleViewHolder
-    ) {
-        super.onViewRecycled(holder)
-
-        Glide.with(holder.itemView)
-            .clear(holder.image)
-
-        holder.image.setImageDrawable(grayPlaceholder)
-    }
 }
