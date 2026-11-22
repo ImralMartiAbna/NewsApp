@@ -62,7 +62,7 @@ class CategoryArticleAdapter :
             .placeholder(grayPlaceholder)
             .error(grayPlaceholder)
             .fallback(grayPlaceholder)
-            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
             .centerCrop()
             .into(holder.image)
     }
