@@ -1,6 +1,7 @@
 package com.example.newsapp.presentation
 
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.DisplayMetrics
 import android.view.View
 import android.widget.Button
@@ -25,6 +26,23 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class MainActivity2 : AppCompatActivity() {
+
+    companion object {
+        private const val MIN_LOADING_DURATION = 4000L
+    }
+
+    // PENGATUR WAKTU LOADING
+    private class LoadingGate {
+        var startedAt: Long = 0L
+        var hold: Boolean = false
+        var delayJob: Job? = null
+    }
+
+    private val mainLoadingGate = LoadingGate()
+    private val technologyLoadingGate = LoadingGate()
+    private val businessLoadingGate = LoadingGate()
+    private val sportsLoadingGate = LoadingGate()
+    private val healthLoadingGate = LoadingGate()
 
     // BERITA UTAMA
     private lateinit var rvMainNews: RecyclerView
@@ -66,6 +84,84 @@ class MainActivity2 : AppCompatActivity() {
     private var userIsDragging = false
     private var direction = 1
 
+    // =================================================
+    // PENGATUR DURASI MINIMUM SKELETON
+    // =================================================
+
+    private fun keepSkeletonVisible(
+        gate: LoadingGate,
+        loading: Boolean,
+        hasArticles: Boolean,
+        onReleased: () -> Unit
+    ): Boolean {
+
+        if (loading) {
+
+            if (gate.startedAt == 0L) {
+                gate.startedAt = SystemClock.elapsedRealtime()
+                gate.hold = false
+
+                gate.delayJob?.cancel()
+                gate.delayJob = null
+            }
+
+            return true
+        }
+
+        // Jika tidak ada berita, jangan menahan loading.
+        if (!hasArticles) {
+            gate.delayJob?.cancel()
+            gate.delayJob = null
+            gate.startedAt = 0L
+            gate.hold = false
+
+            return false
+        }
+
+        // Jika waktu loading belum pernah tercatat.
+        if (gate.startedAt == 0L) {
+            return gate.hold
+        }
+
+        val elapsed =
+            SystemClock.elapsedRealtime() - gate.startedAt
+
+        val remaining =
+            MIN_LOADING_DURATION - elapsed
+
+        if (remaining <= 0L) {
+            gate.delayJob?.cancel()
+            gate.delayJob = null
+            gate.startedAt = 0L
+            gate.hold = false
+
+            return false
+        }
+
+        // Berita sudah tersedia, tetapi skeleton masih ditampilkan.
+        gate.hold = true
+
+        if (gate.delayJob?.isActive != true) {
+
+            gate.delayJob = lifecycleScope.launch {
+
+                delay(remaining)
+
+                gate.hold = false
+                gate.startedAt = 0L
+                gate.delayJob = null
+
+                onReleased()
+            }
+        }
+
+        return true
+    }
+
+    // =================================================
+    // ON CREATE
+    // =================================================
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
@@ -91,7 +187,6 @@ class MainActivity2 : AppCompatActivity() {
         rvMainNews.layoutManager = layoutManager
         rvMainNews.adapter = articleAdapter
 
-        // SNAP HANYA DIPASANG PADA BERITA UTAMA
         snapHelper.attachToRecyclerView(rvMainNews)
 
         rvMainNews.addOnScrollListener(
@@ -150,7 +245,6 @@ class MainActivity2 : AppCompatActivity() {
         rvSports = findViewById(R.id.rvSports)
         rvHealth = findViewById(R.id.rvHealth)
 
-        // ID LOADING DARI activity_main2.xml
         loadingTechnology = findViewById(R.id.loadingTechnology)
         loadingBusiness = findViewById(R.id.loadingBusiness)
         loadingSports = findViewById(R.id.loadingSports)
@@ -181,9 +275,6 @@ class MainActivity2 : AppCompatActivity() {
             healthAdapter
         )
     }
-
-    // Semua kategori menggunakan scroll horizontal bawaan Android.
-    // Tidak menggunakan PagerSnapHelper atau auto-scroll.
 
     private fun setupManualHorizontalRecyclerView(
         recyclerView: RecyclerView,
@@ -365,28 +456,40 @@ class MainActivity2 : AppCompatActivity() {
         val error = newsViewModel.errorMessage.value
         val articles = newsViewModel.articles.value
 
+        val effectiveLoading = keepSkeletonVisible(
+            gate = mainLoadingGate,
+            loading = loading,
+            hasArticles = articles.isNotEmpty(),
+            onReleased = {
+                updateNewsState()
+            }
+        )
+
         layoutNewsLoading.visibility =
-            if (loading && articles.isEmpty()) {
+            if (
+                (loading && articles.isEmpty()) ||
+                mainLoadingGate.hold
+            ) {
                 View.VISIBLE
             } else {
                 View.GONE
             }
 
         layoutNewsError.visibility =
-            if (!loading && !error.isNullOrBlank()) {
+            if (!effectiveLoading && !error.isNullOrBlank()) {
                 View.VISIBLE
             } else {
                 View.GONE
             }
 
         rvMainNews.visibility =
-            if (articles.isNotEmpty()) {
+            if (articles.isNotEmpty() && !effectiveLoading) {
                 View.VISIBLE
             } else {
                 View.GONE
             }
 
-        if (loading && articles.isEmpty()) {
+        if (effectiveLoading && articles.isEmpty()) {
             tvNewsCount.text = "Memuat berita..."
         }
     }
@@ -400,6 +503,7 @@ class MainActivity2 : AppCompatActivity() {
         updateCategoryState(
             rvTechnology,
             loadingTechnology,
+            technologyLoadingGate,
             newsViewModel.technologyLoading.value,
             newsViewModel.technologyArticles.value
         )
@@ -410,6 +514,7 @@ class MainActivity2 : AppCompatActivity() {
         updateCategoryState(
             rvBusiness,
             loadingBusiness,
+            businessLoadingGate,
             newsViewModel.businessLoading.value,
             newsViewModel.businessArticles.value
         )
@@ -420,6 +525,7 @@ class MainActivity2 : AppCompatActivity() {
         updateCategoryState(
             rvSports,
             loadingSports,
+            sportsLoadingGate,
             newsViewModel.sportsLoading.value,
             newsViewModel.sportsArticles.value
         )
@@ -430,28 +536,51 @@ class MainActivity2 : AppCompatActivity() {
         updateCategoryState(
             rvHealth,
             loadingHealth,
+            healthLoadingGate,
             newsViewModel.healthLoading.value,
             newsViewModel.healthArticles.value
         )
     }
 
-    // Fungsi umum untuk mengatur loading setiap kategori.
+    // =================================================
+    // FUNGSI UMUM STATUS KATEGORI
+    // =================================================
+
     private fun updateCategoryState(
         recyclerView: RecyclerView,
         loadingLayout: LinearLayout,
+        gate: LoadingGate,
         loading: Boolean,
         articles: List<Article>
     ) {
 
+        val effectiveLoading = keepSkeletonVisible(
+            gate = gate,
+            loading = loading,
+            hasArticles = articles.isNotEmpty(),
+            onReleased = {
+                updateCategoryState(
+                    recyclerView,
+                    loadingLayout,
+                    gate,
+                    false,
+                    articles
+                )
+            }
+        )
+
         loadingLayout.visibility =
-            if (loading && articles.isEmpty()) {
+            if (
+                (loading && articles.isEmpty()) ||
+                gate.hold
+            ) {
                 View.VISIBLE
             } else {
                 View.GONE
             }
 
         recyclerView.visibility =
-            if (articles.isNotEmpty()) {
+            if (articles.isNotEmpty() && !effectiveLoading) {
                 View.VISIBLE
             } else {
                 View.GONE
@@ -585,6 +714,10 @@ class MainActivity2 : AppCompatActivity() {
         // Navigasi ke NewsDetailActivity akan ditambahkan
         // setelah file NewsDetailActivity.kt dibuat.
     }
+
+    // =================================================
+    // LIFECYCLE
+    // =================================================
 
     override fun onResume() {
         super.onResume()
